@@ -2,48 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>YRN Luxury Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YRN Verification</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background: #111; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #fdf8e4; color: #1a1a1a; padding: 40px; border: 2px solid #c5a059; width: 80%; max-width: 400px; text-align: center; }
-        h1 { font-family: 'Cinzel', serif; color: #c5a059; border-bottom: 1px solid #c5a059; padding-bottom: 10px; }
-        .data-item { margin: 20px 0; border-bottom: 1px dotted #ccc; padding-bottom: 5px; }
-        .label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
-        .value { font-weight: bold; font-size: 1.2rem; }
+        .card { background: #fdf8e4; color: #1a1a1a; padding: 30px; border: 2px solid #c5a059; width: 85%; max-width: 350px; text-align: center; border-radius: 10px; }
+        h1 { font-family: 'Cinzel', serif; color: #c5a059; font-size: 1.2rem; margin-bottom: 20px; }
+        .val { font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; color: #000; }
+        .label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>VERIFIED RECEIPT</h1>
-        <div class="data-item">
-            <div class="label">Customer Name</div>
-            <div id="show-name" class="value">Loading...</div>
-        </div>
-        <div class="data-item">
-            <div class="label">Product</div>
-            <div id="show-item" class="value">...</div>
-        </div>
-        <div class="data-item">
-            <div class="label">Amount Paid</div>
-            <div id="show-price" class="value" style="color: #8a6e2f;">...</div>
-        </div>
-        <p style="font-size: 0.6rem;">This is an official digital record for YRN THE JEWELLER.</p>
+        <h1>VERIFIED BY YRN</h1>
+        <div class="label">Customer</div>
+        <div id="show-name" class="val">Loading...</div>
+        <div class="label">Product</div>
+        <div id="show-item" class="val">...</div>
+        <div class="label">Total Paid</div>
+        <div id="show-price" class="val" style="color:#8a6e2f">...</div>
+        <hr border="0" style="border-top:1px solid #c5a059; margin: 20px 0;">
+        <p style="font-size: 0.6rem;">This is an authentic digital record.</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // IMPORTANT: Replace with your actual Firebase config (See Step 3)
-        const firebaseConfig = {
-            databaseURL: "https://YOUR-PROJECT-ID.firebaseio.com",
-        };
-
+        const firebaseConfig = { databaseURL: "https://yrn-luxury-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Listen for changes
         onValue(ref(db, 'liveReceipt'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
