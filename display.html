@@ -4,44 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YRN Verification</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { background: #111; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #fdf8e4; color: #1a1a1a; padding: 30px; border: 2px solid #c5a059; width: 85%; max-width: 350px; text-align: center; border-radius: 10px; }
-        h1 { font-family: 'Cinzel', serif; color: #c5a059; font-size: 1.2rem; margin-bottom: 20px; }
-        .val { font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; color: #000; }
-        .label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; }
+        body { background: #111; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #fdf8e4; color: #1a1a1a; padding: 30px; border: 2px solid #c5a059; width: 80%; text-align: center; border-radius: 10px; }
+        .val { font-weight: bold; font-size: 1.5rem; margin-bottom: 15px; }
+        .status { font-size: 0.6rem; color: #888; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>VERIFIED BY YRN</h1>
-        <div class="label">Customer</div>
-        <div id="show-name" class="val">Loading...</div>
-        <div class="label">Product</div>
-        <div id="show-item" class="val">...</div>
-        <div class="label">Total Paid</div>
-        <div id="show-price" class="val" style="color:#8a6e2f">...</div>
-        <hr border="0" style="border-top:1px solid #c5a059; margin: 20px 0;">
-        <p style="font-size: 0.6rem;">This is an authentic digital record.</p>
+        <h2 style="color:#c5a059">YRN VERIFIED</h2>
+        <div id="status" class="status">Connecting to generator...</div>
+        <hr>
+        <div style="font-size:0.8rem">Customer</div>
+        <div id="name" class="val">...</div>
+        <div style="font-size:0.8rem">Product</div>
+        <div id="item" class="val">...</div>
+        <div style="font-size:0.8rem">Price</div>
+        <div id="price" class="val" style="color:#8a6e2f">...</div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomName = urlParams.get('room');
 
-        const firebaseConfig = { databaseURL: "https://yrn-luxury-default-rtdb.firebaseio.com/" };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        if (roomName) {
+            const peer = new Peer(); // Create unique ID for phone
+            
+            peer.on('open', () => {
+                const conn = peer.connect(roomName + "-host");
+                
+                conn.on('open', () => {
+                    document.getElementById('status').innerText = "Connected! Waiting for data...";
+                });
 
-        onValue(ref(db, 'liveReceipt'), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('show-name').innerText = data.name;
-                document.getElementById('show-item').innerText = data.item;
-                document.getElementById('show-price').innerText = data.price;
-            }
-        });
+                conn.on('data', (data) => {
+                    document.getElementById('name').innerText = data.name;
+                    document.getElementById('item').innerText = data.item;
+                    document.getElementById('price').innerText = data.price;
+                    document.getElementById('status').innerText = "Live Update Active";
+                });
+            });
+        } else {
+            document.getElementById('status').innerText = "Error: No Room ID found in QR code.";
+        }
     </script>
 </body>
 </html>
