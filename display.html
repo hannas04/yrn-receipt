@@ -3,51 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YRN Verification</title>
+    <title>YRN Luxury Verification</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #111; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #fdf8e4; color: #1a1a1a; padding: 30px; border: 2px solid #c5a059; width: 80%; text-align: center; border-radius: 10px; }
-        .val { font-weight: bold; font-size: 1.5rem; margin-bottom: 15px; }
-        .status { font-size: 0.6rem; color: #888; margin-top: 10px; }
+        body { background: #111; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #fdf8e4; color: #1a1a1a; padding: 40px; border: 2px solid #c5a059; width: 85%; max-width: 400px; text-align: center; border-radius: 8px; }
+        h1 { font-family: 'Cinzel', serif; color: #c5a059; font-size: 1.2rem; margin-bottom: 25px; border-bottom: 1px solid #c5a059; padding-bottom: 10px; }
+        .val { font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; color: #000; }
+        .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; }
+        #status { font-size: 0.6rem; color: #c5a059; margin-top: 25px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color:#c5a059">YRN VERIFIED</h2>
-        <div id="status" class="status">Connecting to generator...</div>
-        <hr>
-        <div style="font-size:0.8rem">Customer</div>
-        <div id="name" class="val">...</div>
-        <div style="font-size:0.8rem">Product</div>
+        <h1>YRN AUTHENTICATED</h1>
+        <div class="lbl">Customer</div>
+        <div id="name" class="val">Connecting...</div>
+        <div class="lbl">Item Purchased</div>
         <div id="item" class="val">...</div>
-        <div style="font-size:0.8rem">Price</div>
+        <div class="lbl">Amount Verified</div>
         <div id="price" class="val" style="color:#8a6e2f">...</div>
+        <div id="status">WAITING FOR GENERATOR...</div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const roomName = urlParams.get('room');
+        const room = urlParams.get('room');
 
-        if (roomName) {
-            const peer = new Peer(); // Create unique ID for phone
-            
+        if (room) {
+            const peer = new Peer();
             peer.on('open', () => {
-                const conn = peer.connect(roomName + "-host");
-                
+                const conn = peer.connect(room + "-yrn-host");
                 conn.on('open', () => {
-                    document.getElementById('status').innerText = "Connected! Waiting for data...";
+                    document.getElementById('status').innerText = "LIVE CONNECTION SECURED";
                 });
-
                 conn.on('data', (data) => {
                     document.getElementById('name').innerText = data.name;
                     document.getElementById('item').innerText = data.item;
                     document.getElementById('price').innerText = data.price;
-                    document.getElementById('status').innerText = "Live Update Active";
                 });
             });
         } else {
-            document.getElementById('status').innerText = "Error: No Room ID found in QR code.";
+            document.getElementById('status').innerText = "ERROR: NO ROOM ID DETECTED";
         }
     </script>
 </body>
