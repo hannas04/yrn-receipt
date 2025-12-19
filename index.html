@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YRN Luxury Receipt - Generator</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --gold-rich: #c5a059;
+            --gold-dark: #8a6e2f;
+            --ink: #1a1a1a;
+            --paper: #fdf8e4; 
+            --sidebar-bg: #111;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #222;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden; 
+        }
+
+        /* --- CONTROLS --- */
+        .controls {
+            width: 380px; 
+            background: var(--sidebar-bg);
+            color: #ddd;
+            padding: 25px;
+            overflow-y: auto;
+            border-right: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .controls h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-rich);
+            text-align: center;
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+            font-weight: 400;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            background: #252525;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 2px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+        }
+        textarea { resize: vertical; min-height: 60px; }
+        input:focus, textarea:focus { outline: 1px solid var(--gold-rich); }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .btn-print { background: #fff; color: #000; }
+        .btn-pdf { background: linear-gradient(135deg, var(--gold-rich), var(--gold-dark)); color: #fff; }
+        button:hover { opacity: 0.9; }
+
+        /* --- PREVIEW AREA --- */
+        .preview-area {
+            flex: 1;
+            background: #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        /* --- RECEIPT DESIGN --- */
+        #receipt-container {
+            width: 210mm;
+            height: 296mm;
+            position: relative;
+            background-color: var(--paper);
+            color: var(--ink);
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .border-frame {
+            position: absolute;
+            top: 10mm; left: 10mm; right: 10mm; bottom: 10mm;
+            border: 2px solid var(--gold-rich);
+            padding: 15mm;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .corner {
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 4px solid var(--gold-rich);
+        }
+        .tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+        .tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+        .bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
+        .br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
+        header { text-align: center; margin-bottom: 25px; }
+        .header-logo { display: block; margin: 0 auto 10px auto; max-height: 110px; width: auto; mix-blend-mode: multiply; }
+        .brand { font-family: 'Cinzel', serif; font-size: 2.8rem; font-weight: 900; color: #000; letter-spacing: 3px; margin: 0; line-height: 1; }
+        .tagline { font-family: 'Cinzel', serif; color: var(--gold-dark); text-transform: uppercase; letter-spacing: 4px; font-size: 0.65rem; font-weight: 700; margin-top: 6px; }
+        .contact-container { margin-top: 15px; border-top: 1px solid var(--gold-rich); border-bottom: 1px solid var(--gold-rich); padding: 10px 0; text-align: center; }
+        .addr-line { font-size: 0.6rem; color: #000; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .details-line { display: flex; justify-content: center; gap: 15px; font-size: 0.65rem; color: #333; font-weight: 500; }
+        .details-line span { color: #000; font-weight: 700; }
+        .web-link { text-transform: lowercase !important; }
+
+        .info-section { display: flex; justify-content: space-between; margin-top: 20px; }
+        .col h3 { font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--gold-dark); border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 12px; text-transform: uppercase; }
+        .field { margin-bottom: 10px; }
+        .lbl { font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+        .val { font-size: 0.95rem; font-weight: 600; color: #000; }
+
+        .product-area { margin-top: 25px; }
+        .prod-title { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 8px; }
+        .specs-grid { display: flex; gap: 40px; }
+        .spec strong { display: block; font-size: 1rem; color: #000; }
+
+        .price-section { text-align: right; margin-top: 25px; }
+        .price-val { font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 800; color: #000; margin-top: 5px; }
+
+        .footer-layout { margin-top: auto; display: flex; flex-direction: column; gap: 15px; }
+        .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
+        .disclaimer { width: 55%; font-size: 0.55rem; color: #555; text-align: justify; line-height: 1.4; }
+        .signature-box { width: 180px; text-align: center; }
+        .sign-line { border-bottom: 1px solid #000; height: 30px; margin-bottom: 5px; }
+        .sign-label { font-size: 0.6rem; text-transform: uppercase; color: #555; letter-spacing: 1px; }
+
+        .auth-row { border-top: 2px solid var(--gold-rich); padding-top: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 20px; }
+        .seal { width: 80px; height: 80px; border: 2px solid var(--gold-rich); border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-family: 'Cinzel', serif; font-size: 0.6rem; font-weight: 700; color: var(--gold-dark); background: #fefcf5; }
+        
+        /* Fixed QR Container */
+        #qrcode { 
+            width: 80px; height: 80px; 
+            background: #fff;
+            padding: 5px;
+            border: 1px solid var(--gold-rich);
+        }
+
+        @media print {
+            body { background: white; margin: 0; display: block; overflow: visible; }
+            .controls { display: none !important; }
+            .preview-area { display: block; padding: 0; margin: 0; background: white; }
+            #receipt-container { box-shadow: none; margin: 0; width: 210mm; height: 296mm; page-break-after: avoid; page-break-before: avoid; overflow: hidden; }
+            @page { size: A4 portrait; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>YRN Generator</h2>
+        <div class="input-group"><label>Full Address</label><textarea id="i-addr" oninput="upd()">SHOP (G-022E) GROUND, Opposite Mama tega' SPAR Tejuosho ultra-Modern Shopping Complex, Yaba, Lagos</textarea></div>
+        <div class="input-group"><label>Phone</label><input type="text" id="i-phone" value="+234 818 572 7263" oninput="upd()"></div>
+        <div class="input-group"><label>Website/Display Link</label><input type="text" id="i-web" value="display.html" oninput="upd()"></div>
+        <hr style="border-color:#444; margin:15px 0;">
+        <div class="input-group"><label>Transaction ID</label><input type="text" id="i-id" value="YRN-9920" oninput="upd()"></div>
+        <div class="input-group"><label>Date</label><input type="date" id="i-date" oninput="upd()"></div>
+        <div class="input-group"><label>Customer Name</label><input type="text" id="i-name" value="Emeka Okafor" oninput="upd()"></div>
+        <hr style="border-color:#444; margin:15px 0;">
+        <div class="input-group"><label>Product Name</label><input type="text" id="i-item" value="Diamond Cuban Link" oninput="upd()"></div>
+        <div class="input-group"><label>Metal Details</label><input type="text" id="i-metal" value="18K White Gold" oninput="upd()"></div>
+        <div class="input-group"><label>Weight</label><input type="text" id="i-weight" value="60g" oninput="upd()"></div>
+        <div class="input-group"><label>Amount (₦)</label><input type="text" id="i-price" value="₦3,000,000.00" oninput="upd()"></div>
+
+        <div class="btn-group">
+            <button class="btn-print" onclick="window.print()">Print</button>
+            <button class="btn-pdf" onclick="savePDF()">PDF</button>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="receipt-container">
+            <div class="border-frame">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+
+                <header>
+                    <img src="logo-yrn.jpg" alt="YRN Logo" class="header-logo">
+                    <h1 class="brand">YRN THE JEWELLER</h1>
+                    <div class="tagline">Authentic Luxury Goods</div>
+                    <div class="contact-container">
+                        <div class="addr-line" id="o-addr">...</div>
+                        <div class="details-line">
+                            <span id="o-phone">...</span>
+                            <div style="color:var(--gold-rich)">|</div>
+                            <span class="web-link" id="o-web">...</span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="info-section">
+                    <div class="col">
+                        <h3>Customer Info</h3>
+                        <div class="field"><span class="lbl">Billed To</span><div class="val" id="o-name">...</div></div>
+                        <div class="field"><span class="lbl">Status</span><div style="font-size:0.8rem; font-weight:700; color:var(--gold-rich);">VERIFIED PURCHASE</div></div>
+                    </div>
+                    <div class="col" style="text-align:right;">
+                        <h3>Receipt Details</h3>
+                        <div class="field"><span class="lbl">Receipt Number</span><div class="val" id="o-id">...</div></div>
+                        <div class="field"><span class="lbl">Date Issued</span><div class="val" id="o-date">...</div></div>
+                    </div>
+                </div>
+
+                <div class="product-area">
+                    <div class="prod-title" id="o-item">...</div>
+                    <div class="specs-grid">
+                        <div class="spec"><span class="lbl">Material</span><strong id="o-metal">...</strong></div>
+                        <div class="spec"><span class="lbl">Weight</span><strong id="o-weight">...</strong></div>
+                        <div class="spec"><span class="lbl">Condition</span><strong>Brand New</strong></div>
+                    </div>
+                </div>
+
+                <div class="price-section">
+                    <span class="lbl">Total Amount Paid</span>
+                    <div class="price-val" id="o-price">...</div>
+                </div>
+
+                <div class="footer-layout">
+                    <div class="bottom-row">
+                        <div class="disclaimer">
+                            <strong>CERTIFICATE OF AUTHENTICITY</strong><br>
+                            YRN The Jeweller certifies that the item listed is genuine. We guarantee the fineness of gold.
+                        </div>
+                        <div class="signature-box"><div class="sign-line"></div><div class="sign-label">Authorized Signature</div></div>
+                    </div>
+                    <div class="auth-row">
+                        <div class="seal">OFFICIAL<br>YRN<br>SEAL</div>
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // CONFIGURATION - Replace YOUR-PROJECT-ID after creating your Firebase project
+        const firebaseConfig = { databaseURL: "https://YOUR-PROJECT-ID.firebaseio.com" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // This sends data to the other website
+        window.broadcastData = function() {
+            set(ref(db, 'liveReceipt'), {
+                name: document.getElementById('i-name').value,
+                item: document.getElementById('i-item').value,
+                price: document.getElementById('i-price').value
+            });
+        };
+    </script>
+
+    <script>
+        // Set default date
+        document.getElementById('i-date').valueAsDate = new Date();
+        
+        // Initialize QR Generator
+        let qrcode = new QRCode(document.getElementById("qrcode"), {
+            width: 80,
+            height: 80,
+            colorDark: "#000000",
+            colorLight: "#fdf8e4"
+        });
+
+        function makeQR() {
+            // This grabs the URL from the input and generates the QR
+            const url = document.getElementById('i-web').value;
+            qrcode.makeCode(url);
+        }
+
+        function upd() {
+            const map = { 
+                'i-addr': 'o-addr', 'i-phone': 'o-phone', 'i-web': 'o-web',
+                'i-id': 'o-id', 'i-name': 'o-name', 'i-item': 'o-item', 
+                'i-metal': 'o-metal', 'i-weight': 'o-weight', 'i-price': 'o-price' 
+            };
+            for (const [inp, out] of Object.entries(map)) {
+                const el = document.getElementById(inp);
+                const target = document.getElementById(out);
+                if(el && target) target.innerText = el.value;
+            }
+
+            const dVal = document.getElementById('i-date').value;
+            if(dVal) { const d = new Date(dVal); document.getElementById('o-date').innerText = d.toLocaleDateString('en-GB'); }
+            
+            makeQR();
+            if (typeof broadcastData === "function") broadcastData();
+        }
+
+        function savePDF() {
+            const element = document.getElementById('receipt-container');
+            const id = document.getElementById('i-id').value;
+            const opt = { margin: 0, filename: `YRN_Receipt_${id}.pdf`, image: { type: 'jpeg', quality: 1.0 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        // Run initial update
+        upd();
+    </script>
+</body>
+</html>
