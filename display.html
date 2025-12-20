@@ -3,49 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YRN Luxury Verification</title>
+    <title>YRN Official Verification</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #111; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #fdf8e4; color: #1a1a1a; padding: 40px; border: 2px solid #c5a059; width: 85%; max-width: 400px; text-align: center; border-radius: 8px; }
-        h1 { font-family: 'Cinzel', serif; color: #c5a059; font-size: 1.2rem; margin-bottom: 25px; border-bottom: 1px solid #c5a059; padding-bottom: 10px; }
-        .val { font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; color: #000; }
-        .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; }
-        #status { font-size: 0.6rem; color: #c5a059; margin-top: 25px; font-weight: bold; }
+        :root { --gold: #c5a059; --paper: #fdf8e4; --success: #28a745; }
+        body { background: #111; color: #1a1a1a; font-family: 'Montserrat', sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        
+        .receipt-card { background: var(--paper); border: 2px solid var(--gold); width: 100%; max-width: 450px; padding: 25px; border-radius: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        
+        .header { text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 15px; margin-bottom: 20px; }
+        .brand { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 900; margin: 0; }
+        
+        .live-indicator { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
+        .verify-text { color: var(--success); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; }
+
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px; }
+        .lbl { font-size: 0.65rem; color: #777; text-transform: uppercase; font-weight: 700; }
+        .val { font-size: 0.9rem; font-weight: 700; text-align: right; max-width: 60%; }
+        
+        .price-box { background: #1a1a1a; color: var(--gold); padding: 15px; text-align: center; margin-top: 20px; border-radius: 2px; }
+        .price-box .val { text-align: center; font-size: 1.8rem; font-family: 'Cinzel'; width: 100%; max-width: 100%; display: block; }
+        
+        .timestamp-box { margin-top: 20px; font-size: 0.65rem; text-align: center; color: #555; font-style: italic; border-top: 1px dashed var(--gold); padding-top: 10px; }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>YRN AUTHENTICATED</h1>
-        <div class="lbl">Customer</div>
-        <div id="name" class="val">Connecting...</div>
-        <div class="lbl">Item Purchased</div>
-        <div id="item" class="val">...</div>
-        <div class="lbl">Amount Verified</div>
-        <div id="price" class="val" style="color:#8a6e2f">...</div>
-        <div id="status">WAITING FOR GENERATOR...</div>
+
+    <div class="receipt-card">
+        <div class="header">
+            <h1 class="brand">YRN THE JEWELLER</h1>
+            <div class="live-indicator">
+                <div class="dot"></div>
+                <div class="verify-text">SECURE LIVE VERIFICATION</div>
+            </div>
+        </div>
+
+        <div class="row"><div class="lbl">Receipt ID</div><div id="d-id" class="val">---</div></div>
+        <div class="row"><div class="lbl">Customer</div><div id="d-name" class="val">Connecting...</div></div>
+        <div class="row"><div class="lbl">Item</div><div id="d-item" class="val">---</div></div>
+        <div class="row"><div class="lbl">Material</div><div id="d-metal" class="val">---</div></div>
+        <div class="row"><div class="lbl">Weight</div><div id="d-weight" class="val">---</div></div>
+        
+        <div class="price-box">
+            <div class="lbl" style="color: #aaa;">Authorized Amount</div>
+            <div id="d-price" class="val">₦0.00</div>
+        </div>
+
+        <div class="timestamp-box">
+            Verified on: <span id="d-time">Awaiting Sync...</span>
+        </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const room = urlParams.get('room');
-
+        const room = new URLSearchParams(window.location.search).get('room');
+        
         if (room) {
             const peer = new Peer();
             peer.on('open', () => {
-                const conn = peer.connect(room + "-yrn-host");
-                conn.on('open', () => {
-                    document.getElementById('status').innerText = "LIVE CONNECTION SECURED";
-                });
+                const conn = peer.connect(room + "-host");
+                
                 conn.on('data', (data) => {
-                    document.getElementById('name').innerText = data.name;
-                    document.getElementById('item').innerText = data.item;
-                    document.getElementById('price').innerText = data.price;
+                    // Update Content
+                    document.getElementById('d-id').innerText = data.id || "N/A";
+                    document.getElementById('d-name').innerText = data.name || "N/A";
+                    document.getElementById('d-item').innerText = data.item || "N/A";
+                    document.getElementById('d-metal').innerText = data.metal || "N/A";
+                    document.getElementById('d-weight').innerText = data.weight || "N/A";
+                    document.getElementById('d-price').innerText = data.price || "₦0.00";
+                    
+                    // Update Timestamp to the current time of sync
+                    const now = new Date();
+                    document.getElementById('d-time').innerText = now.toLocaleDateString() + " at " + now.toLocaleTimeString();
                 });
             });
-        } else {
-            document.getElementById('status').innerText = "ERROR: NO ROOM ID DETECTED";
+            
+            peer.on('error', () => {
+                document.getElementById('d-name').innerText = "Connection Failed";
+            });
         }
     </script>
 </body>
